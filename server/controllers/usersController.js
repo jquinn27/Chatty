@@ -1,5 +1,6 @@
 const User = require("../model/userModel")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const { isValidObjectId } = require("mongoose");
 
 module.exports.register = async (req, res, next) =>{
     try {
@@ -24,4 +25,37 @@ module.exports.register = async (req, res, next) =>{
     } catch (error) {
         next(error);
     }
+}
+
+module.exports.login = async (req, res, next) =>{
+    try {
+        const { username, password} = req.body;
+        const user = await User.findOne({username});
+        if(!user){
+            return res.json({msg:"Incorrect username or password", status: false})
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if(!isPasswordValid){
+            return res.json({msg: "Incorrect password", status: false})
+        }
+      
+        delete user.password;
+        return res.json({status:true,user});
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports.validateUser = async (req, res, next) =>{
+    try{
+        const { _id } = req.body
+        console.log( _id);
+        const user = await isValidObjectId(_id )
+        if(!user){
+            return res.json({msg: "Invalid user.", status: false});
+        }
+        return res.json({status:true})
+    } catch(error){
+        next(error)
+    };
 }

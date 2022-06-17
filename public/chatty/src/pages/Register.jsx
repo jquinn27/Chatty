@@ -5,7 +5,7 @@ import Logo from "../assets/logo.svg"
 import {ToastContainer, toast} from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios"
-import { registerRoute } from '../utils/APIRoutes';
+import { registerRoute, validateUser } from '../utils/APIRoutes';
 
 
 function Register() {
@@ -39,6 +39,35 @@ function Register() {
           
         }
     }
+
+    
+    useEffect(() =>{
+      async function userValid(){
+        let localUser = JSON.parse(localStorage.getItem("chat-app-user"))
+      
+        if(localUser){
+          const {data} = await axios.post(validateUser,{
+            _id: localUser._id
+          })
+          if(data.status===false){
+            localStorage.removeItem("chat-app-user")
+            return
+          }
+          if(data.status===true){
+            navigate("/")
+          }
+        }
+
+        if(!localUser){
+          return
+        }
+
+      
+      }
+      userValid()
+    }, [])
+
+
     
     const toastOptions = {
       
