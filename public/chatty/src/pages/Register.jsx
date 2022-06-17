@@ -1,11 +1,16 @@
 import React, {useState, useEffect} from 'react'
 import styled from "styled-components"
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import Logo from "../assets/logo.svg"
 import {ToastContainer, toast} from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css"
+import axios from "axios"
+import { registerRoute } from '../utils/APIRoutes';
+
 
 function Register() {
+
+    const navigate = useNavigate();
 
     const [values, setValues]=useState({
         username: "",
@@ -14,23 +19,80 @@ function Register() {
         confirmPassword: ""
     });
 
-    const handleSubmit = (event) =>{
+    const handleSubmit = async (event) =>{
         event.preventDefault();
-        handleValidation();
+        if(handleValidation()){
+          //valid. calls API
+          const { password, email, username } = values;
+          const {data} = await axios.post(registerRoute,{
+            username,
+            email,
+            password
+          });
+          if(data.status===false){
+            toast.error(data.msg, toastOptions)
+          }
+          if(data.status===true){
+            localStorage.setItem('chat-app-user', JSON.stringify(data.user));
+            navigate("/");
+          }
+          
+        }
+    }
+    
+    const toastOptions = {
+      
+        position: 'bottom-right',
+        autoClose: 8000,
+        pauseOnHover: true,
+        draggable: true,
+        theme: 'dark'
+    
+    }
+
+    var emailRegex = /^[-!#$%&'*+\/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+\/0-9=?A-Z^_a-z`{|}~])*@[a-zA-Z0-9](-*\.?[a-zA-Z0-9])*\.[a-zA-Z](-?[a-zA-Z0-9])+$/;
+
+    function isEmailValid(email) {
+        if (!email)
+            return false;
+
+        if(email.length>254)
+            return false;
+
+        var valid = emailRegex.test(email);
+        if(!valid)
+            return false;
+
+        // Further checking of some things regex can't handle
+        var parts = email.split("@");
+        if(parts[0].length>64)
+            return false;
+
+        var domainParts = parts[1].split(".");
+        if(domainParts.some(function(part) { return part.length>63; }))
+            return false;
+
+        return true;
     }
 
     const handleValidation = () =>{
         const {username, email, password, confirmPassword} = values;
 
         if(password !==confirmPassword){
-            toast.error("Password and confirm password should match.", {
-                position: 'bottom-right',
-                autoClose: 8000,
-                pauseOnHover: true,
-                draggable: true,
-                theme: 'dark'
-            })
+            toast.error("Password and confirm password should match.", toastOptions)
+            return false;
+        } else if(username.length<3){
+          toast.error("Username must be longer than 3 characters.", toastOptions)
+          return false;
         }
+        else if(password.length<8){
+          toast.error("Password must be longer than 8 characters.", toastOptions)
+          return false;
+        } else if(isEmailValid(email) !== true){
+          toast.error("Email must be valid.", toastOptions)
+          return false;
+        }
+        return true;
     }
 
     const handleChange = (event) =>{
