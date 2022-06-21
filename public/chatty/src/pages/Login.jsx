@@ -62,7 +62,7 @@ function Login() {
             return
           }
           if(data.status===true){
-            navigate("/")
+            navigate("/");
           }
         }
 
