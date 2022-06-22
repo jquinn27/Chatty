@@ -20,6 +20,7 @@ module.exports.register = async (req, res, next) =>{
             username,
             password: hashedPassword,
         });
+        user.password = undefined;
         delete user.password;
         return res.json({status:true,user});
     } catch (error) {
@@ -38,9 +39,10 @@ module.exports.login = async (req, res, next) =>{
         if(!isPasswordValid){
             return res.json({msg: "Incorrect password", status: false})
         }
-      
+        user.password = undefined;
         delete user.password;
-        return res.json({status:true,user});
+        console.log(user.password)
+        return res.json({status:true, user});
     } catch (error) {
         next(error);
     }
@@ -69,6 +71,20 @@ module.exports.setAvatar = async (req, res, next) => {
         },
         {new: true});
         return res.json({isSet:userData.isAvatarImageSet, image:userData.avatarImage})
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports.getAllUsers = async (req, res, next) => {
+    try {
+        const users = await User.find({_id:{$ne:req.params.id}}).select([
+            "email",
+            "username",
+            "avatarImage",
+            "_id"
+        ]);
+        return res.json(users);
     } catch (error) {
         next(error)
     }
