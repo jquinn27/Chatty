@@ -41,7 +41,6 @@ module.exports.login = async (req, res, next) =>{
         }
         user.password = undefined;
         delete user.password;
-        console.log(user.password)
         return res.json({status:true, user});
     } catch (error) {
         next(error);
